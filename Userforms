@@ -1,0 +1,522 @@
+Dim B_D_Apr As Worksheet, B_D_items, B_D_OyD As Worksheet
+Dim Comb_Apr(1, 12) As String
+Dim ty As String
+Dim ty_o As String
+Dim d_x_l As Date
+Dim PrGet_cd As String
+Dim ar_4_gD() As Variant
+Dim row_x, col_y As Integer
+Dim rowes As Integer
+Dim subl As String
+Dim idApr As Long
+'=============================================================================
+'Dim ws As Worksheet
+'Dim FromRow As Long
+'Dim FromCol As Integer
+'Dim MyColumnCount As Integer
+'Dim MyPath As String
+'Dim db As Database
+'Dim MyTable As Recordset
+'Dim MyLookupValue As String
+'Dim MyMsg As String
+'Dim MsgLine1 As String
+'Dim rsp
+
+Private Sub ComboBox1_AfterUpdate()
+    If ComboBox1.Value <> Empty Then
+        Dim X As Integer
+            X = 2
+            Do Until B_D_items.Cells(X, 9) = ""
+                If B_D_items.Cells(X, 9).Value = CStr(ComboBox1.Value) Then
+                    'Cod Bodega
+                        ty = CStr(B_D_items.Cells(X, 8))
+                    Exit Do
+                End If
+                    X = X + 1
+            Loop
+    End If
+End Sub
+'
+'Private Sub ComboBox1_Exit(ByVal Cancel As MSForms.ReturnBoolean)
+'    If ComboBox1.Value <> "" Then
+'            ComboBox1.MatchRequired = True
+'    End If
+'End Sub
+
+Private Sub CommandButton1_Click()
+    If ListBox1.Value = Empty Then
+        MsgBox "No hay datos que registrar", vbInformation
+    Else
+        Call placingDatainsheet
+        Call Clean_All
+        Call Populate_Bodegas_And_items
+        'Call Getprettydata
+        Application.ThisWorkbook.Save
+    End If
+End Sub
+
+Private Sub CommandButton13_Click()
+
+End Sub
+
+Private Sub CommandButton2_Click()
+Me.Hide
+End Sub
+
+Private Sub CommandButton3_Click()
+    If TextBox3.Value = Empty Then
+        MsgBox "Debe llenar el campo 'Cantidad' ", vbInformation
+    ElseIf ComboBox1.Value = Empty Then
+        MsgBox "Debe llenar el campo 'Destino' ", vbInformation
+    ElseIf ComboBox2.Value = Empty Then
+        MsgBox "Debe llenar el campo 'item' ", vbInformation
+    Else
+        Call populateArr_ListB
+        Call Clean_Labels
+        Call Populate_Bodegas_And_items
+        ComboBox2.SetFocus
+    End If
+End Sub
+
+Private Sub CommandButton5_Click()
+Dim i As Integer
+    For i = 0 To ListBox1.ListCount - 1
+        If ListBox1.Selected(i) Then
+            ListBox1.RemoveItem (i)
+        End If
+    Next i
+    rowes = rowes - 1
+End Sub
+
+Private Sub Image1_BeforeDragOver(ByVal Cancel As MSForms.ReturnBoolean, ByVal Data As MSForms.DataObject, ByVal X As Single, ByVal Y As Single, ByVal DragState As MSForms.fmDragState, ByVal Effect As MSForms.ReturnEffect, ByVal Shift As Integer)
+
+End Sub
+
+Private Sub Label13_Click()
+
+End Sub
+
+Private Sub ListBox1_Click()
+
+End Sub
+
+'
+'Private Sub CommandButton4_Click()
+'Call UPDATE_RECORD
+'End Sub
+
+Private Sub TextBox3_AfterUpdate()
+    If UserForm1.ComboBox1.Value <> "" And rowes = 1 Then
+            'Populating the listbox
+            Call listbDimention
+            UserForm1.ListBox1.Clear
+                    Comb_Apr(0, 0) = "N° de Aprovicionamiento"
+                    Comb_Apr(0, 1) = "Fecha"
+                    Comb_Apr(0, 2) = "Item"
+                    Comb_Apr(0, 3) = "Descripción del Item"
+                    Comb_Apr(0, 4) = "Origen"
+                    Comb_Apr(0, 5) = "Destino"
+                    Comb_Apr(0, 6) = "Cantidad (kg)"
+                    Comb_Apr(0, 7) = "U.M Orden"
+                    Comb_Apr(0, 8) = "Cantidad en U.M Orden"
+                    Comb_Apr(0, 9) = "Factor U.M Orden"
+                    Comb_Apr(0, 10) = "Peso U.M Orden"
+                    Comb_Apr(0, 11) = "Bodega Origen"
+                    Comb_Apr(0, 12) = "Bodega Destino"
+                        Dim f As String
+                        Dim c As Double
+                            f = CStr(Label4.Caption)
+                            c = CDbl(DateValue(f))
+                                Comb_Apr(1, 0) = idApr
+                                Comb_Apr(1, 1) = f
+                                Comb_Apr(1, 2) = CStr(ComboBox2.Value)
+                                Comb_Apr(1, 3) = Label13.Caption
+                                Comb_Apr(1, 4) = CStr(ComboBox3.Value)
+                                Comb_Apr(1, 5) = CStr(ComboBox1.Value)
+                                Comb_Apr(1, 6) = CStr(TextBox3.Value)
+                                Comb_Apr(1, 7) = Label9.Caption
+                                Comb_Apr(1, 8) = Label20.Caption
+                                Comb_Apr(1, 9) = Label11.Caption
+                                Comb_Apr(1, 10) = Label21.Caption
+                                Comb_Apr(1, 11) = CStr(ty_o)
+                                Comb_Apr(1, 12) = CStr(ty)
+                                     UserForm1.ListBox1.List = Comb_Apr()
+                                        rowes = rowes + 1
+                                        idApr = idApr + 1
+            Call Clean_Labels
+            Call Populate_Bodegas_And_items
+            Me.ComboBox2.SetFocus
+        End If
+    End Sub
+    
+    Private Sub ComboBox2_AfterUpdate()
+        If ComboBox2.Value <> Empty Then
+                Call getDescrip
+                Call getOrigin1
+        End If
+    End Sub
+'    Private Sub ComboBox2_Exit(ByVal Cancel As MSForms.ReturnBoolean)
+'        If ComboBox2.Value <> "" Then
+'                ComboBox2.MatchRequired = True
+'        End If
+'    End Sub
+
+Private Sub TextBox3_Change()
+    If TextBox3.Value <> Empty And IsNumeric(TextBox3.Value) = True And ComboBox2.Value <> Empty Then
+        Dim Peso_um As Double
+            Peso_um = CDbl(Label21.Caption)
+                Dim cant_um As Double
+                    If Peso_um <> 0 Then
+                        cant_um = Round(CDbl(TextBox3.Value) / Peso_um, 0)
+                            Label20.Caption = CStr(cant_um)
+                    End If
+    End If
+End Sub
+
+Private Sub UserForm_Initialize()
+        d_x_l = Date
+        PrGet_cd = Format(d_x_l, "dd/mm/yyyy")
+        Dim xpire As Double
+        xpire = CDbl(DateValue(PrGet_cd))
+            If xpire < 43625 Then
+                Call Clean_Labels
+                Call Populate_Bodegas_And_items
+                rowes = 1
+            Else
+                Call Lic_Marlon
+            End If
+            Call getid
+End Sub
+
+'This are my methods
+Private Sub getid()
+        With B_D_Apr
+            Set B_D_Apr = ThisWorkbook.Worksheets("BD_Apr")
+        End With
+        Dim Ultima_fila_BD As Range
+            Dim nueva_fila As Integer
+                Set Ultima_fila_BD = B_D_Apr.Cells(1, 1).CurrentRegion 'BD location for new data
+                nueva_fila = Ultima_fila_BD.Rows.Count + 1
+        idApr = nueva_fila - 1
+End Sub
+
+Private Sub Populate_Bodegas_And_items()
+        With B_D_items
+            Set B_D_items = ThisWorkbook.Worksheets("BD_items")
+        End With
+    Dim X As Integer
+        X = 2
+            Do Until B_D_items.Cells(X, 1) = ""  'Populating item
+                UserForm1.ComboBox2.AddItem B_D_items.Cells(X, 1).Value
+                    X = X + 1
+            Loop
+        X = 2
+            Do Until B_D_items.Cells(X, 8) = ""  'Populating Bodegas d
+                UserForm1.ComboBox1.AddItem B_D_items.Cells(X, 9).Value 'Bodegas d
+                    X = X + 1
+            Loop
+             X = 2
+            Do Until B_D_items.Cells(X, 8) = ""  'Populating Bodegas o
+                UserForm1.ComboBox3.AddItem B_D_items.Cells(X, 9).Value 'Bodegas o
+                    X = X + 1
+            Loop
+        With B_D_OyD
+            Set B_D_OyD = ThisWorkbook.Worksheets("BD_OyD")
+        End With
+'        ComboBox1.ZOrder 0
+'        ComboBox3.ZOrder 0
+End Sub
+
+Private Sub Clean_Labels()
+        ComboBox2.Clear
+        TextBox3.Value = ""
+        Label4.Caption = Format(PrGet_cd, "mm/dd/yy") 'Funcion TODAY()
+        Label9.Caption = ""
+        Label11.Caption = ""
+        Label13.Caption = ""
+        Label20.Caption = ""
+        Label21.Caption = ""
+End Sub
+
+Private Sub Lic_Marlon()
+                MsgBox "Please Contact your Software Provider [Marlon] in order to continue!", vbCritical
+                    Me.Hide
+                        Unload Me
+End Sub
+
+Private Sub getOrigin1()
+    If subl = "06 - GRANOS" Then
+        Dim u As Integer
+            u = 2
+            Do Until B_D_OyD.Cells(u, 1) = ""
+                If (B_D_OyD.Cells(u, 1).Value = CStr(ComboBox2.Value)) And (B_D_OyD.Cells(u, 7).Value = ComboBox1.Value) Then
+                        Dim Origin As String
+                            Origin = B_D_OyD.Cells(u, 5).Value
+                                UserForm1.ComboBox3.Value = Origin
+                                ty_o = CStr(B_D_OyD.Cells(u, 4).Value)
+                    Exit Do
+                End If
+                    u = u + 1
+            Loop
+    Else
+        Call getOrigin2
+    End If
+End Sub
+
+Private Sub getOrigin2()
+    If subl = "02 - HARINA" Or subl = "05 - PASTAS" Then
+        UserForm1.ComboBox3.Value = "CERETE"
+        ty_o = "00009"
+    ElseIf subl = "01 - CONSERVAS" Or subl = "02 - SARDINA" Then
+        UserForm1.ComboBox3.Value = "IPIALES"
+        ty_o = "00-91"
+    Else
+        UserForm1.ComboBox3.Value = "Seleccionar"
+        ty_o = "0"
+    End If
+End Sub
+
+Private Sub getDescrip()
+            Dim X As Integer
+                X = 2
+                Do Until B_D_items.Cells(X, 1) = ""
+                    If B_D_items.Cells(X, 1).Value = CStr(ComboBox2.Value) Then
+                        Dim desc As String
+                            desc = B_D_items.Cells(X, 2).Value
+                            subl = B_D_items.Cells(X, 6).Value
+                                UserForm1.Label13.Caption = desc
+                                UserForm1.Label9.Caption = B_D_items.Cells(X, 3).Value
+                                UserForm1.Label11.Caption = B_D_items.Cells(X, 4).Value
+                                UserForm1.Label21.Caption = Replace(B_D_items.Cells(X, 5).Value, ",", ".")
+                        Exit Do
+                    End If
+                        X = X + 1
+                Loop
+End Sub
+Private Sub populateArr_ListB()
+ ReDim ar_4_gD(rowes, 12) '2
+    Dim i, j As Integer
+    i = 0
+    For i = 0 To rowes - 1 Step 1
+        j = 0
+        For j = 0 To 12 Step 1
+            ar_4_gD(i, j) = UserForm1.ListBox1.List(i, j)
+        Next j
+    Next i
+    j = 0
+    For j = 0 To 12 Step 1
+        ar_4_gD(rowes, j) = UserForm1.ListBox1.List(1, j)
+    Next j
+            ar_4_gD(0, 0) = "N° de Aprovicionamiento"
+            ar_4_gD(0, 1) = "Fecha"
+            ar_4_gD(0, 2) = "Item"
+            ar_4_gD(0, 3) = "Descripción del Item"
+            ar_4_gD(0, 4) = "Origen"
+            ar_4_gD(0, 5) = "Destino"
+            ar_4_gD(0, 6) = "Cantidad (kg)"
+            ar_4_gD(0, 7) = "U.M Orden"
+            ar_4_gD(0, 8) = "Cantidad en U.M Orden"
+            ar_4_gD(0, 9) = "Factor U.M Orden"
+            ar_4_gD(0, 10) = "Peso U.M Orden"
+            ar_4_gD(0, 11) = "Bodega Origen"
+            ar_4_gD(0, 12) = "Bodega Destino"
+                Dim f As String
+                    Dim c As Double
+                    f = CStr(Label4.Caption)
+                    c = CDbl(DateValue(f))
+                        ar_4_gD(rowes, 0) = idApr
+                        ar_4_gD(rowes, 1) = f
+                        ar_4_gD(rowes, 2) = CStr(ComboBox2.Value)
+                        ar_4_gD(rowes, 3) = Label13.Caption
+                        ar_4_gD(rowes, 4) = CStr(ComboBox3.Value)
+                        ar_4_gD(rowes, 5) = CStr(ComboBox1.Value)
+                        ar_4_gD(rowes, 6) = CStr(TextBox3.Value)
+                        ar_4_gD(rowes, 7) = Label9.Caption
+                        ar_4_gD(rowes, 8) = Label20.Caption
+                        ar_4_gD(rowes, 9) = Label11.Caption
+                        ar_4_gD(rowes, 10) = Label21.Caption
+                        ar_4_gD(rowes, 11) = CStr(ty_o)
+                        ar_4_gD(rowes, 12) = CStr(ty)
+                            Call listbDimention
+                            UserForm1.ListBox1.List = ar_4_gD()
+                                rowes = rowes + 1
+                                idApr = idApr + 1
+End Sub
+
+Private Sub listbDimention()
+            With UserForm1.ListBox1
+                .ColumnCount = 13
+                .ColumnHeads = False
+                .ForeColor = vbBlack
+                .ListStyle = fmListStylePlain
+                .ColumnWidths = "135;70;75;225;155;120;130;120;130;150;150"
+                .TextAlign = fmTextAlignCenter
+                .Height = 200
+                .Width = 740
+            End With
+End Sub
+
+Private Sub Clean_All()
+        ComboBox3.Clear
+        ComboBox1.Clear
+        ComboBox2.Clear
+        TextBox3.Value = ""
+        Label4.Caption = Format(PrGet_cd, "mm/dd/yy") 'Funcion TODAY()
+        Label9.Caption = ""
+        Label11.Caption = ""
+        Label13.Caption = ""
+        Label20.Caption = ""
+        Label21.Caption = ""
+        ListBox1.Clear
+End Sub
+
+Private Sub placingDatainsheet()
+    Dim B_d As Worksheet
+    ThisWorkbook.Worksheets("BD_Apr").Activate
+        With Worksheets("BD_Apr")
+            Set B_d = ThisWorkbook.Worksheets("BD_Apr")
+        End With
+    Dim Finale() As Variant
+    Dim X, Y As Integer
+        X = UserForm1.ListBox1.ListCount
+        Y = UserForm1.ListBox1.ColumnCount
+            ReDim Finale(X - 1, Y - 1)
+        Dim i, j As Integer  'Filling the array Finale with ListB values
+            For i = 0 To (X - 1) Step 1
+                For j = 0 To (Y - 1) Step 1
+                    Finale(i, j) = UserForm1.ListBox1.List(i, j)
+                Next j
+            Next i
+    Dim col, k As Integer  'Taking Finale to BD
+        For k = 1 To (X - 1) Step 1
+            Dim Ultima_fila_BD As Range
+            Dim nueva_fila As Integer
+                Set Ultima_fila_BD = B_d.Cells(1, 1).CurrentRegion 'BD location for new data
+                nueva_fila = Ultima_fila_BD.Rows.Count + 1
+                Cells(nueva_fila, 1).Value = Application.UserName
+            For col = 2 To 14 Step 1
+                Cells(nueva_fila, col).Value = Finale(k, col - 2)
+            Next col
+            Cells(nueva_fila, 17) = "False"
+            Cells(nueva_fila, 3).Select
+            Selection.NumberFormat = "dd/mm/yy"
+'            Cells(nueva_fila, 19) = subl
+        Next k
+End Sub
+
+'=============================================================================
+'- UPDATE AN ACCESS RECORD FROM EXCEL
+'- FIND SPECIFIED RECORD IN AN ACCESS TABLE FROM EXCEL
+'=============================================================================
+'- EXCEL  : GETS LOOKUP VALUE FROM ROW CONTAINING SELECTED CELL COLUMN A
+'- ACCESS : CHECKS CORRECT RECORD FOUND
+'- ACCESS : REPLACES RECORD VALUES WITH EXCEL WORKSHEET VALUES
+'- We save code by "changing" field values even if they are the same.
+'
+'=============================================================================
+'- MAIN ROUTINE
+'=============================================================================
+'Sub UPDATE_RECORD()
+'    '-------------------------------------------------------------------------
+'    '- ASSUMES ACCESS .MDB IS IN THE SAME FOLDER AS THIS WORKBOOK
+'    MyPath = ThisWorkbook.Path & "\"
+'    ChDrive MyPath
+'    ChDir MyPath
+'    '-------------------------------------------------------------------------
+'    '- EXCEL : GET LOOKUP VALUE & NUMBER OF COLUMNS
+'    Set ws = ActiveSheet
+'    With ws
+'        FromRow = ActiveCell.Row
+'        MyColumnCount = .Cells(FromRow, .Columns.Count).End(xlToLeft).Column
+'        MyLookupValue = .Cells(FromRow, "A").Value
+'    End With
+'    '-------------------------------------------------------------------------
+'    '- ACCESS : SET RECORDSET = TABLE
+'    Set Db = DBEngine(0).OpenDatabase(MyPath & "Database_Apr_Planeacion.accdb")
+'    Set MyTable = Db.OpenRecordset("Table1", dbOpenDynaset)
+'    With MyTable
+'        '---------------------------------------------------------------------
+'        '- DO LOOKUP. HERE USES FIELD CALLED "Field1"
+'        .FindFirst "Field1='" & MyLookupValue & "'"
+'        '---------------------------------------------------------------------
+'        '- CHECK IF MATCH FOUND
+'        If .NoMatch Then
+'            MsgBox (MyLookupValue & " not found.")
+'            GoTo GetOut
+'        Else
+'            '------------------------------------------------------------------
+'            '- MESSAGE TO CHECK CURRENT RECORD
+'            MsgLine1 = "FOUND RECORD CONTENTS BELOW.     OK to change ?"
+'            GetMessage          ' SUBROUTINE
+'           rsp = MsgBox(MyMsg, vbOKCancel, "  FOUND RECORD")
+'           If rsp = vbCancel Then GoTo GetOut
+'            '------------------------------------------------------------------
+'            '- UPDATE ACCESS RECORD
+'            .Edit
+'            For FromCol = 1 To MyColumnCount
+'                .Fields(FromCol - 1).Value = ws.Cells(FromRow, FromCol).Value
+'            Next
+'            .Update
+'            '------------------------------------------------------------------
+'        End If
+'    End With
+'    '--------------------------------------------------------------------------
+'    '- CONFIRMATION MESSAGE
+'    MsgLine1 = "CONFIRM CHANGE"
+'    GetMessage          ' SUBROUTINE
+'    rsp = MsgBox(MyMsg, vbOKOnly, " CURRENT POSITION")
+'    '--------------------------------------------------------------------------
+'GetOut:
+'    MyTable.Close
+'    Db.Close
+'    Set MyTable = Nothing
+'    Set Db = Nothing
+'End Sub
+''=============================================================================
+''- SUBROUTINE TO SET UP MESSAGE
+''- aligns XL values using spaces (not an exact science)
+''=============================================================================
+'Private Sub GetMessage()
+'    Dim XLval As Variant
+'    Dim ACval As Variant
+'    Dim XLalignment As Integer  ' MESSAGE ALIGN XL COLUMN WITH SPACES
+'    XLalignment = 30
+'    '-------------------------------------------------------------------------
+'    With MyTable
+'        MyMsg = MsgLine1 & vbCr & vbCr _
+'        & "ACCESSS" & Space(XLalignment) & "EXCEL" & vbCr & vbCr
+'        '---------------------------------------------------------------------
+'        '-  CHECK COLUMNS
+'        For FromCol = 1 To MyColumnCount
+'            XLval = ws.Cells(FromRow, FromCol)
+'            ACval = .Fields(FromCol - 1).Value
+'            MyMsg = MyMsg _
+'                & .Fields(FromCol - 1).Name & " : " & ACval _
+'                & Space(XLalignment - Len(CStr(ACval))) _
+'                & IIf(XLval = ACval, "      =  ", "---->> *") & XLval & vbCr
+'        Next
+'    End With
+'End Sub
+'''-----------------------------------------------------------------------------
+'Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+'    If MsgBox("Esta a punto de cerrar este formulario", vbOKCancel, "Cerrar Formulario") = vbCancel Then
+'    Cancel = True
+'    Exit Sub
+'Else
+'    Application.ThisWorkbook.Save
+'End If
+'
+''Dim ff As String
+''ff = "Aprovisionamiento" + CStr(Date)
+''Application.ThisWorkbook.Save
+''Dim dg As String
+''Dim mi As Integer
+''mi = CInt(Len(Application.ThisWorkbook.FullName)) - CInt(Len(Right(Application.ThisWorkbook.FullName, 9)))
+''MsgBox mi
+''dg = Mid(Application.ThisWorkbook.FullName, 1, mi)
+''MsgBox dg
+''ChDir dg
+''    ActiveWorkbook.SaveAs Filename:=ff, _
+''FileFormat:=xlExcel12, CreateBackup:=False
+''Application.ThisWorkbook.Close
+'End Sub
