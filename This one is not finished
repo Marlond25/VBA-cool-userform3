@@ -1,0 +1,196 @@
+Dim Bd, Bd2 As Worksheet
+Dim X, f, Y, i, k, u, e As Integer
+Dim Vfor() As String
+Dim Var As String
+Dim verify As Boolean
+
+Private Sub CommandButton6_Click()
+Application.ScreenUpdating = False
+    With BD_Apr
+        Set Bd = ThisWorkbook.Worksheets("BD_Apr")
+    End With
+    Bd.Select
+    Bd.Activate
+'Determine the "Listbox" dimension and load the captured information.
+f = 2 'filas
+i = 0
+Y = 2
+Do Until Cells(Y, 1) = Empty
+    If UserForm2.ComboBox1.Value = "Sin despacho" Then
+        verify = False
+        ElseIf UserForm2.ComboBox1.Value = "Despachado" Then
+            verify = True
+    Else
+        MsgBox "Por favor seleccione un criterio para la busqueda de Aprovisionamiento", vbExclamation
+        Exit Do
+        'corrrr
+    End If
+        If Bd.Cells(Y, 17).Value = verify Then
+                k = k + 1
+        End If
+            Y = Y + 1
+Loop
+'============================================================================================================
+If k <> 0 Then
+
+Call listbDimention2
+k = k
+ReDim Vfor(k, 17)
+i = 0
+Do Until Bd.Cells(f, 1) = Empty
+                If Bd.Cells(f, 17).Value = verify Then
+                u = 1
+                e = 0
+                    Do Until Bd.Cells(f, u) = Empty
+                    Dim v As String
+                     v = CStr(Cells(f, u).Value)
+                        Vfor(i + 1, e) = v
+                        u = u + 1
+                        e = e + 1
+                    Loop
+                    i = i + 1
+                End If
+        f = f + 1
+Loop
+    Vfor(0, 0) = "Usuario Apr"
+    Vfor(0, 1) = "N° de Aprovicionamiento"
+    Vfor(0, 2) = "Fecha"
+    Vfor(0, 3) = "Item"
+    Vfor(0, 4) = "Descripción del Item"
+    Vfor(0, 5) = "Origen"
+    Vfor(0, 6) = "Destino"
+    Vfor(0, 7) = "Cantidad (kg)"
+    Vfor(0, 8) = "U.M Orden"
+    Vfor(0, 9) = "Cantidad en U.M Orden"
+    Vfor(0, 10) = "Factor U.M Orden"
+    Vfor(0, 11) = "Peso U.M Orden"
+    Vfor(0, 12) = "Bodega Origen"
+    Vfor(0, 13) = "Bodega Destino"
+    Vfor(0, 14) = "Usuario Tb"
+    Vfor(0, 15) = "Fecha Tb"
+    Vfor(0, 16) = "Aprovisionamiento"
+    Vfor(0, 17) = "TB - "
+'nn|/===============================================================================================================================
+Call listbDimention2
+UserForm2.ListBox1.List = Vfor()
+Else
+    MsgBox "No hay registros con este Criterio", vbInformation
+End If
+Application.ScreenUpdating = False
+    With BD_items
+        Set Bd2 = ThisWorkbook.Worksheets("BD_items")
+    End With
+    Bd2.Activate
+End Sub
+
+Private Sub CommandButton7_Click()
+Application.ScreenUpdating = False
+If UserForm2.TextBox1.Value <> Empty Then
+    With BD_Apr
+        Set Bd = ThisWorkbook.Worksheets("BD_Apr")
+    End With
+    Bd.Select
+    Bd.Activate
+        Dim cuenta, datos(17) As String, fila As Integer
+        cuenta = UserForm2.ListBox1.ListCount
+        If UserForm2.ListBox1.Selected(0) = True Then
+            MsgBox "Por favor seleccione una fila distinta al encabezado!", vbCritical
+            
+        Else
+        
+        Dim i As Integer
+            For i = 0 To UserForm2.ListBox1.ListCount - 1
+                If UserForm2.ListBox1.Selected(i) = True Then
+                
+'            For fila = cuenta To 0 Step -1
+'                If UserForm2.ListBox1.Selected(fila) Then
+                    For e = 0 To 17
+'                        datos(e) = UserForm2.ListBox1.List(fila, e)
+                         datos(e) = UserForm2.ListBox1.List(i, e)
+                    Next e
+                    Dim Ultima_fila_BD As Range
+                    Dim nueva_fila As Integer
+                        Set Ultima_fila_BD = Bd.Cells(1, 1).CurrentRegion 'BD location for new data
+                        nueva_fila = Ultima_fila_BD.Rows.Count + 1
+        Dim f As Integer
+        f = 2
+            Do Until Bd.Cells(f, 1).Value = Empty
+                        If Bd.Cells(f, 2).Value = datos(1) Then
+                                Bd.Cells(f, 1).Value = datos(0)
+                                Bd.Cells(f, 2).Value = datos(1)
+                                Bd.Cells(f, 3).Value = datos(2)
+                                Bd.Cells(f, 4).Value = datos(3)
+                                Bd.Cells(f, 5).Value = datos(4)
+                                Bd.Cells(f, 6).Value = datos(5)
+                                Bd.Cells(f, 7).Value = datos(6)
+                                Bd.Cells(f, 8).Value = datos(7)
+                                Bd.Cells(f, 9).Value = datos(8)
+                                Bd.Cells(f, 10).Value = datos(9)
+                                Bd.Cells(f, 11).Value = datos(10)
+                                Bd.Cells(f, 12).Value = datos(11)
+                                Bd.Cells(f, 13).Value = datos(12)
+                                Bd.Cells(f, 14).Value = datos(13)
+                                Bd.Cells(f, 15).Value = Application.UserName
+                                Dim ffff As String
+                                Dim fct As Date
+                                fct = Date
+                                ffff = Format(CStr(fct), "dd/mm/yyyy")
+                                Bd.Cells(f, 16).Value = ffff
+                                Bd.Cells(f, 17).Value = "TRUE"
+                                Bd.Cells(f, 18).Value = "TB - " & UserForm2.TextBox1.Value
+                        End If
+                f = f + 1
+        Loop
+        
+                End If
+            Next i 'fila
+        End If
+        UserForm2.ListBox1.Clear
+Call CommandButton6_Click
+UserForm2.TextBox1.Value = ""
+Else
+MsgBox "Por favor indique un valor para TB - ", vbInformation
+End If
+Application.ScreenUpdating = False
+    With BD_items
+        Set Bd2 = ThisWorkbook.Worksheets("BD_items")
+    End With
+    Bd2.Activate
+End Sub
+
+Private Sub Label1_Click()
+
+End Sub
+
+Private Sub UserForm_Initialize()
+    Call UploadCb1Vl
+End Sub
+
+'=============================================================================================================================
+
+Private Sub UploadCb1Vl()
+    UserForm2.ComboBox1.AddItem "Sin despacho"
+    UserForm2.ComboBox1.AddItem "Despachado"
+End Sub
+Private Sub listbDimention2()
+            UserForm2.ListBox1.Clear
+            With UserForm2.ListBox1
+                .ColumnCount = 18
+                .ColumnHeads = False
+                .ForeColor = vbBlack
+                .ListStyle = fmListStyleOption
+                .ColumnWidths = "120;50;45;195;100;100;70;50;90;90;75"
+                .TextAlign = fmTextAlignCenter
+                .MultiSelect = fmMultiSelectExtended
+            End With
+End Sub
+
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    If MsgBox("Esta a punto de cerrar este formulario", vbOKCancel, "Cerrar formulario") = vbCancel Then
+    Cancel = True
+    Exit Sub
+Else
+    Application.ThisWorkbook.Save
+End If
+
+End Sub
