@@ -1,3 +1,5 @@
+'Formularios
+
 Private Sub CommandButton1_Click()
 Load UserForm1
 UserForm1.Show (False)
@@ -6,4 +8,16 @@ End Sub
 Private Sub CommandButton2_Click()
 Load UserForm2
 UserForm2.Show vbModeless
+End Sub
+
+
+'This workbook
+
+Private Sub Workbook_BeforeClose(Cancel As Boolean)
+Application.ThisWorkbook.Save
+End Sub
+
+Private Sub Workbook_Open()
+Load UserForm1
+UserForm1.Show
 End Sub
